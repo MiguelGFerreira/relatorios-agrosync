@@ -137,7 +137,7 @@ export default function RelatorioDespejoRkfPage() {
         if (filters.dataFim) searchParams.push(`dataFim=${filters.dataFim}`);
 
         try {
-            const apiUrl = `/api/despejo-rkf${searchParams.join('&')}`;
+            const apiUrl = `/api/relatorios/despejo-rkf${searchParams.join('&')}`;
             const result = await fetcher(apiUrl);
             setData(result);
         }

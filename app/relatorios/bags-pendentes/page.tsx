@@ -15,7 +15,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const BagDetailsModal = ({ bagId, onClose }: { bagId: number | null, onClose: () => void }) => {
     
-    const { data, error, isLoading } = useSWR<Bag[]>(bagId ? `/api/bag?idbag=${bagId}` : null, fetcher)
+    const { data, error, isLoading } = useSWR<Bag[]>(bagId ? `/api/relatorios/bag?idbag=${bagId}` : null, fetcher)
     
     if (!bagId) return null;
     
@@ -115,7 +115,7 @@ export default function BagsPendentesPage() {
     const [dia, setDia] = useState(getTodayDateString());
     const [selectedBagId, setSelectedBagId] = useState<number | null>(null);
 
-    const { data, error, isLoading } = useSWR<BagPendente[]>(`/api/bags-pendentes?dia=${dia}`, fetcher);
+    const { data, error, isLoading } = useSWR<BagPendente[]>(`/api/relatorios/bags-pendentes?dia=${dia}`, fetcher);
 
     console.log("dados:", data);
     const bagsPorEmpilhadeira = useMemo(() => {

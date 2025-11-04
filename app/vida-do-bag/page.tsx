@@ -8,6 +8,7 @@ import useSWR from "swr";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useDebounce from "../utils/useDebounce";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface BagSnapshot {
     idbag: number;
@@ -69,6 +70,10 @@ const LocationUpdateModal = ({ bagId, onClose, onSave }: { bagId: number | null,
     const [isCheckingAla, setIsCheckingAla] = useState(false);
 
     const { data: tipos, error: errorTipos } = useSWR<TipoLocalizacao[]>('/api/localizacao/tipos', fetcher);
+    
+    const { data: session } = useSession();
+
+    const idUsuario = session?.user.id;
 
     // so busca os blocos se a ala for valida
     const { data: blocos, error: errorBlocos, isLoading: isLoadingBlocos } = useSWR<BlocoAla[]>(
@@ -119,7 +124,7 @@ const LocationUpdateModal = ({ bagId, onClose, onSave }: { bagId: number | null,
             const response = await fetch('/api/localizacao', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idbag: bagId, tipo, ala, bloco })
+                body: JSON.stringify({ idbag: bagId, tipo, ala, bloco, idUsuario })
             })
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
