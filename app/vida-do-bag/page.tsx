@@ -133,7 +133,7 @@ const LocationUpdateModal = ({ bagId, onClose, onSave }: { bagId: number | null,
             onSave();
         }
         catch (err) {
-            toast.error('Erro ao salvar.')
+            toast.error('Erro ao salvar.', { description: err instanceof Error ? err.message : 'Erro desconhecido' });
         } finally {
             setIsSaving(false);
         }

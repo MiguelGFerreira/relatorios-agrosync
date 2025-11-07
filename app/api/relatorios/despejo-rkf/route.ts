@@ -36,30 +36,37 @@ export async function GET(request: Request) {
     const dataInicio = searchParams.get('dataInicio');
     const dataFim = searchParams.get('dataFim');
 
-    const whereClauses = ["1=1"];
+    const whereClauses = ["OS.idcliente = 30"];
 
     if (os) {
         whereClauses.push(`(idGs = '${os}' OR refGs LIKE '%${os}%')`);
     }
 
-    if (dataInicio && !dataFim) {
-        whereClauses.push(`CAST(dataHoraAtualizacao AS DATE) = '${dataInicio}'`);
+    if ((dataInicio === dataFim) || (dataInicio && !dataFim)) {
+        whereClauses.push(`EB.dataAtualizacao BETWEEN '${dataInicio}' AND DATEADD(DAY, 1, '${dataInicio}')`);
     } else if (dataInicio && dataFim) {
-        whereClauses.push(`dataHoraAtualizacao BETWEEN '${dataInicio}' AND '${dataFim}'`);
+        whereClauses.push(`EB.dataAtualizacao BETWEEN '${dataInicio}' AND '${dataFim}'`);
     }
 
     const query = `
-        SELECT nrLote, 
-            tagBag, 
-            qtdEntradaBag, 
-            qtdValidado, 
-            refGs, 
-            dataHoraAtualizacao, 
-            statusBag, 
-            siloDestino 
-        FROM TbInventarioBag
+        SELECT EB.id_bag
+            ,EB.dataAtualizacao despejo
+            ,TBI.nrLote
+            ,TBI.tagBag
+            ,TBI.qtdEntradaBag
+            ,TBI.qtdValidado
+            ,TBI.refGs
+            ,TBI.dataHoraAtualizacao pesagem
+            ,TBI.statusBag
+            ,TBI.siloDestino
+        FROM Embarque E
+        INNER JOIN Itens_OS I ON E.id = I.id_origem
+        INNER JOIN OS ON OS.id = I.id_os
+        INNER JOIN Embarque_Lotes EL ON E.id = EL.idembarque
+        INNER JOIN Embarque_Bag EB ON EB.id_embarquelotes = EL.id
+        LEFT JOIN TbInventarioBag TBI ON TBI.idBag = EB.id_bag
         WHERE ${whereClauses.join(' AND ')}
-        ORDER BY dataHoraAtualizacao DESC
+        ORDER BY TBI.dataHoraAtualizacao DESC
     `;
 
     console.log(query);

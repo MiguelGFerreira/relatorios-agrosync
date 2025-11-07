@@ -3,7 +3,7 @@
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import { DespejoRkfReportRecord } from "@/app/types";
 import { Loader2, Scale, Search, Warehouse } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 // mudei o fetcher para qunado a api retornar algum erro, jogar um erro pro swr
@@ -24,10 +24,9 @@ const SummaryCards = ({ data }: { data: DespejoRkfReportRecord[] }) => {
 
         const totalPorSilo = data.reduce((acc, item) => {
             const silo = item.siloDestino || '';
-            if (!acc[silo]) {
-                acc[silo] = 0;
-            }
-            acc[silo] += item.qtdValidado;
+            if (!silo) return acc;
+
+            acc[silo] = ((acc[silo] || 0) + item.qtdValidado);
             return acc;
         }, {} as Record<string, number>);
 
@@ -71,23 +70,25 @@ const ReportTable = ({ data }: { data: DespejoRkfReportRecord[] }) => {
                 <table className="grupotristao">
                     <thead>
                         <tr>
-                            <th>Data/Hora</th>
+                            <th>Data/Hora Despejo</th>
                             <th>Lote</th>
                             <th>Tag Bag</th>
                             <th>Qtd. Validado (kg)</th>
                             <th>Ref. OS</th>
                             <th>Silo Destino</th>
+                            <th>Data/Hora Inventario</th>
                         </tr>
                     </thead>
                     <tbody>
                         {data.map((item, index) => (
                             <tr key={`${item.tagBag}-${index}`}>
-                                <td>{new Date(item.dataHoraAtualizacao).toLocaleString('pt-BR')}</td>
+                                <td>{new Date(item.despejo).toLocaleString('pt-BR')}</td>
                                 <td>{item.nrLote}</td>
                                 <td>{item.tagBag}</td>
                                 <td>{item.qtdValidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                 <td>{item.refGs}</td>
                                 <td>{item.siloDestino}</td>
+                                <td>{new Date(item.pesagem).toLocaleString('pt-BR')}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -97,24 +98,11 @@ const ReportTable = ({ data }: { data: DespejoRkfReportRecord[] }) => {
     );
 };
 
-// const FilterBar = ({ filters, onFilterChange, showOnlyDumped, onToggleDumped }: {
-//     filters: { os: string, dataInicio: string, dataFim: string },
-//     onFilterChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-//     showOnlyDumped: boolean,
-//     onToggleDumped: (checked: boolean) => void
-// }) => {
-//     return (
-
-//     )
-// }
-
 export default function RelatorioDespejoRkfPage() {
     const [filters, setFilters] = useState({ os: '', dataInicio: '', dataFim: '' });
     const [data, setData] = useState<DespejoRkfReportRecord[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const [showOnlyDumped, setShowOnlyDumped] = useState(false);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -146,18 +134,7 @@ export default function RelatorioDespejoRkfPage() {
         } finally {
             setIsLoading(false);
         }
-    }
-
-    // useMemo pra filtrar bags despejados. Se estiver marcado, vai retornar os dados filtrados. Se nao estiver marcado, vai voltar todos os dados.
-    const displayedData = useMemo(() => {
-        if (!data) return [];
-
-        if (!showOnlyDumped) {
-            return data;
-        }
-
-        return data.filter(item => item.statusBag === 'S');
-    }, [data, showOnlyDumped])
+    };
 
     return (
         <div className="space-y-6">
@@ -192,19 +169,6 @@ export default function RelatorioDespejoRkfPage() {
                         {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Buscar"}
                     </button>
                 </div>
-                <div className="flex items-center justify-start h-full pb-1">
-                    <label htmlFor="dumped-switch" className="relative inline-flex items-center cursor-pointer">
-                        <input
-                            id="dumped-switch"
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={showOnlyDumped}
-                            onChange={(e) => setShowOnlyDumped(e.target.checked)}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                        <span className="ml-3 text-sm font-medium text-gray-700">Apenas despejados</span>
-                    </label>
-                </div>
             </div>
 
             {/* Principal */}
@@ -213,8 +177,8 @@ export default function RelatorioDespejoRkfPage() {
 
             {data && (
                 <div className="space-y-6 animate-fade-in">
-                    <SummaryCards data={displayedData} />
-                    <ReportTable data={displayedData} />
+                    <SummaryCards data={data} />
+                    <ReportTable data={data} />
                 </div>
             )}
         </div>

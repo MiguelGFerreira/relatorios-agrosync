@@ -16,12 +16,14 @@ export interface DespejoRkfPayload {
 }
 
 export interface DespejoRkfReportRecord {
+    id_bag: number;
+    despejo: string;
     nrLote: string;
     tagBag: number;
     qtdEntradaBag: number;
     qtdValidado: number;
     refGs: string;
-    dataHoraAtualizacao: string;
+    pesagem: string;
     statusBag: string;
     siloDestino: string;
 }
