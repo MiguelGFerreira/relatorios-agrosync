@@ -82,13 +82,13 @@ const ReportTable = ({ data }: { data: DespejoRkfReportRecord[] }) => {
                     <tbody>
                         {data.map((item, index) => (
                             <tr key={`${item.tagBag}-${index}`}>
-                                <td>{new Date(item.despejo).toLocaleString('pt-BR')}</td>
+                                <td>{new Date(item.despejo.replace('Z', '')).toLocaleString('pt-BR')}</td>
                                 <td>{item.nrLote}</td>
                                 <td>{item.tagBag}</td>
                                 <td>{item.qtdValidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                 <td>{item.refGs}</td>
                                 <td>{item.siloDestino}</td>
-                                <td>{new Date(item.pesagem).toLocaleString('pt-BR')}</td>
+                                <td>{new Date(item.pesagem.replace('Z', '')).toLocaleString('pt-BR')}</td>
                             </tr>
                         ))}
                     </tbody>

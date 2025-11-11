@@ -1,7 +1,6 @@
 import { dbQuery } from "@/app/lib/db";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials"
-import { JWT } from "next-auth/jwt"
 import { sanitizeForSQL } from "@/app/utils/sanitizeSql";
 
 export const authOptions: NextAuthOptions = {
