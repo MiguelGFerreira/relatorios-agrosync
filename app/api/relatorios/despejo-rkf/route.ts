@@ -42,7 +42,7 @@ export async function GET(request: Request) {
         whereClauses.push(`(idGs = '${os}' OR refGs LIKE '%${os}%')`);
     }
 
-    if ((dataInicio === dataFim) || (dataInicio && !dataFim)) {
+    if (dataInicio && (dataInicio === dataFim) || (dataInicio && !dataFim)) {
         whereClauses.push(`EB.dataAtualizacao BETWEEN '${dataInicio}' AND DATEADD(DAY, 1, '${dataInicio}')`);
     } else if (dataInicio && dataFim) {
         whereClauses.push(`EB.dataAtualizacao BETWEEN '${dataInicio}' AND '${dataFim}'`);

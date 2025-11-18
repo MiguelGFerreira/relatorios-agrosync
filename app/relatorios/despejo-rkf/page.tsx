@@ -19,18 +19,32 @@ const fetcher = async (url: string) => {
 };
 
 const SummaryCards = ({ data }: { data: DespejoRkfReportRecord[] }) => {
-    const { totalValidado, totalPorSilo } = (() => {
-        const totalValidado = data.reduce((sum, item) => sum + item.qtdValidado, 0);
+    const pesoEmbalagem = 6; // kg
+    const { totalValidado, totalPorSilo, refGsPorSilo, refGsTotal } = (() => {
+        const totalValidado = data.reduce((sum, item) => sum + item.qtdValidado - pesoEmbalagem, 0);
 
         const totalPorSilo = data.reduce((acc, item) => {
             const silo = item.siloDestino || '';
             if (!silo) return acc;
 
-            acc[silo] = ((acc[silo] || 0) + item.qtdValidado);
+            acc[silo] = ((acc[silo] || 0) + item.qtdValidado - pesoEmbalagem);
             return acc;
         }, {} as Record<string, number>);
 
-        return { totalValidado, totalPorSilo };
+        // Coleta refGs únicos por silo
+        const refGsPorSilo = data.reduce((acc, item) => {
+            const silo = item.siloDestino || '';
+            if (!silo) return acc;
+
+            if (!acc[silo]) acc[silo] = new Set();
+            acc[silo].add(item.refGs);
+            return acc;
+        }, {} as Record<string, Set<string>>);
+
+        // Coleta refGs únicos total
+        const refGsTotal = new Set(data.map(item => item.refGs));
+
+        return { totalValidado, totalPorSilo, refGsPorSilo, refGsTotal };
     })();
 
     return (
@@ -39,8 +53,9 @@ const SummaryCards = ({ data }: { data: DespejoRkfReportRecord[] }) => {
                 <div className="flex items-center gap-4">
                     <Scale size={32} />
                     <div>
-                        <p className="text-sm font-light">QTD. TOTAL VALIDADO</p>
+                        <p className="text-sm font-light">QTD. TOTAL DESPEJADO</p>
                         <p className="text-2xl font-bold">{totalValidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} kg</p>
+                        <p className="text-xs font-light mt-2">Ref. GS: {Array.from(refGsTotal).join(', ')}</p>
                     </div>
                 </div>
             </div>
@@ -51,6 +66,7 @@ const SummaryCards = ({ data }: { data: DespejoRkfReportRecord[] }) => {
                         <div>
                             <p className="text-sm text-gray-500">TOTAL PARA O SILO {silo}</p>
                             <p className="text-2xl font-bold text-gray-800">{total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} kg</p>
+                            <p className="text-xs text-gray-600 mt-2">Ref. GS: {Array.from(refGsPorSilo[silo] || new Set()).join(', ')}</p>
                         </div>
                     </div>
                 </div>
