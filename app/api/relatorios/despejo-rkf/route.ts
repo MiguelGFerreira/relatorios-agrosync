@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const whereClauses = ["OS.idcliente = 30"];
 
     if (os) {
-        whereClauses.push(`(idGs = '${os}' OR refGs LIKE '%${os}%')`);
+        whereClauses.push(`(idGs = TRY_CAST('${os}' AS int) OR refGs LIKE '%${os}%')`);
     }
 
     if (dataInicio && (dataInicio === dataFim) || (dataInicio && !dataFim)) {
@@ -49,24 +49,39 @@ export async function GET(request: Request) {
     }
 
     const query = `
+        WITH UltimoInventario
+        AS (
+            SELECT TBI.*
+                ,ROW_NUMBER() OVER (
+                    PARTITION BY TBI.idBag ORDER BY TBI.dataHoraAtualizacao DESC
+                    ) AS rn
+            FROM TbInventarioBag TBI
+            )
         SELECT EB.id_bag
-            ,EB.dataAtualizacao despejo
-            ,TBI.nrLote
-            ,TBI.tagBag
-            ,TBI.qtdEntradaBag
-            ,TBI.qtdValidado
-            ,TBI.refGs
-            ,TBI.dataHoraAtualizacao pesagem
-            ,TBI.statusBag
-            ,TBI.siloDestino
+            ,EB.dataAtualizacao AS despejo
+            ,UI.nrLote
+            ,UI.tagBag
+            ,UI.qtdEntradaBag
+            ,UI.qtdValidado
+            ,UI.refGs
+            ,UI.idGs
+            ,UI.dataHoraAtualizacao AS pesagem
+            ,UI.statusBag
+            ,UI.siloDestino
         FROM Embarque E
-        INNER JOIN Itens_OS I ON E.id = I.id_origem
+        INNER JOIN Itens_OS I ON I.id_origem = E.id
         INNER JOIN OS ON OS.id = I.id_os
-        INNER JOIN Embarque_Lotes EL ON E.id = EL.idembarque
+        INNER JOIN Embarque_Lotes EL ON EL.idembarque = E.id
         INNER JOIN Embarque_Bag EB ON EB.id_embarquelotes = EL.id
-        LEFT JOIN TbInventarioBag TBI ON TBI.idBag = EB.id_bag
+        INNER JOIN UltimoInventario UI ON UI.idBag = EB.id_bag
+            AND UI.rn = 1 -- último inventário do bag
         WHERE ${whereClauses.join(' AND ')}
-        ORDER BY TBI.dataHoraAtualizacao DESC
+            -- bag só pertence ao embarque se o último inventário for da MESMA GS da OS
+            AND (
+                UI.idGs = TRY_CAST(OS.codGs AS int)
+                OR UI.refGs = OS.codGs
+                )
+        ORDER BY UI.dataHoraAtualizacao DESC
     `;
 
     console.log(query);

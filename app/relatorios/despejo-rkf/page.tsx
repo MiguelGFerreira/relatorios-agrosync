@@ -22,9 +22,10 @@ const SummaryCards = ({ data }: { data: DespejoRkfReportRecord[] }) => {
     const pesoEmbalagem = 6; // kg
     const { totalValidado, totalPorSilo, refGsPorSilo, refGsTotal } = (() => {
         const totalValidado = data.reduce((sum, item) => sum + item.qtdValidado - pesoEmbalagem, 0);
+        console.log(data);
 
         const totalPorSilo = data.reduce((acc, item) => {
-            const silo = item.siloDestino || '';
+            const silo = item.siloDestino || 'MANUAL';
             if (!silo) return acc;
 
             acc[silo] = ((acc[silo] || 0) + item.qtdValidado - pesoEmbalagem);
@@ -101,10 +102,10 @@ const ReportTable = ({ data }: { data: DespejoRkfReportRecord[] }) => {
                                 <td>{new Date(item.despejo.replace('Z', '')).toLocaleString('pt-BR')}</td>
                                 <td>{item.nrLote}</td>
                                 <td>{item.tagBag}</td>
-                                <td>{item.qtdValidado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td>{item.qtdValidado?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || ''}</td>
                                 <td>{item.refGs}</td>
                                 <td>{item.siloDestino}</td>
-                                <td>{new Date(item.pesagem.replace('Z', '')).toLocaleString('pt-BR')}</td>
+                                <td>{new Date(item.pesagem?.replace('Z', '')).toLocaleString('pt-BR') || ''}</td>
                             </tr>
                         ))}
                     </tbody>
